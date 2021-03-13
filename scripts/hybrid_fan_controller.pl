@@ -6,7 +6,7 @@
 
 # It relies on you having two fan zones.
 
-# To use this correctly, you should connect all your PWM HD fans, by splitters if necessary to the FANA header. 
+# To use this correctly, you should connect all your PWM HD fans, by splitters if necessary to the FANA header.
 # CPU, case and exhaust fans should then be connected to the numbered (ie CPU based) headers.  This script will then control the
 # HD fans in response to the HD temp, and the other fans in response to CPU temperature. When CPU temperature is high the HD fans.
 # will be used to provide additional cooling, if you specify cpu/hd shared cooling.
@@ -39,12 +39,12 @@
 #            every time
 # 2016-10-07 Replaced get_cpu_temp() function with get_cpu_temp_sysctl() which queries the kernel, instead of
 #            IPMI. This is faster, more accurate and more compatible, hopefully allowing this to work on X9
-#            systems. The original function is still present and is now called get_cpu_temp_ipmi(). 
-#            Because this is a much faster method of reading the temps,  and because its actually the max core 
-#            temp, I found that the previous cpu_hd_override_temp of 60 was too sensitive and caused the override 
-#            too often. I've bumped it up to 62, which on my system seems good. This means that if a core gets to 
-#            62C the HD fans will kick in, and this will generally bring temps back down to around 60C... depending 
-#            on the actual load. Your results will vary, and for best results you should tune controller with 
+#            systems. The original function is still present and is now called get_cpu_temp_ipmi().
+#            Because this is a much faster method of reading the temps,  and because its actually the max core
+#            temp, I found that the previous cpu_hd_override_temp of 60 was too sensitive and caused the override
+#            too often. I've bumped it up to 62, which on my system seems good. This means that if a core gets to
+#            62C the HD fans will kick in, and this will generally bring temps back down to around 60C... depending
+#            on the actual load. Your results will vary, and for best results you should tune controller with
 #            mprime testing at various thread levels. Updated the cpu threasholds to 35/45/55 because of the improved
 #            responsiveness of the get_cpu_temp function
 ###############################################################################################
@@ -63,7 +63,7 @@ $med_cpu_temp = 45;	 	# will go MEDIUM when we hit, or drop below again
 $low_cpu_temp = 35;		# will go LOW when we fall below 35 again
 
 ## HD THRESHOLD TEMPS
-## HD change temperature slowly. 
+## HD change temperature slowly.
 ## This is the temperature that we regard as being uncomfortable. The higher this is the
 ## more silent your system.
 ## Note, it is possible for your HDs to go above this... but if your cooling is good, they shouldn't.
@@ -71,7 +71,7 @@ $hd_max_allowed_temp = 38;	# celsius. you will hit 100% duty cycle when you HDs 
 
 ## CPU TEMP TO OVERRIDE HD FANS
 ## when the CPU climbs above this temperature, the HD fans will be overridden
-## this prevents the HD fans from spinning up when the CPU fans are capable of providing 
+## this prevents the HD fans from spinning up when the CPU fans are capable of providing
 ## sufficient cooling.
 $cpu_hd_override_temp = 62;
 
@@ -125,7 +125,7 @@ $hd_fan_zone = 1;
 ## these are the fan headers which are used to verify the fan zone is high. FAN1+ are all in Zone 0, FANA is Zone 1.
 ## cpu_fan_header should be in the cpu_fan_zone
 ## hd_fan_header should be in the hd_fan_zone
-$cpu_fan_header = "FAN1";	
+$cpu_fan_header = "FAN1";
 $hd_fan_header = "FANA";
 
 
@@ -173,9 +173,9 @@ $hd_max_fan_speed *= 0.8;
 #fan/bmc verification globals/timers
 $last_fan_level_change_time = 0;		# the time when we changed a fan level last
 $fan_unreadable_time = 0;			# the time when a fan read failure started, 0 if there is none.
-$bmc_fail_count = 0;				# how many times the fans failed verification in the last period. 
+$bmc_fail_count = 0;				# how many times the fans failed verification in the last period.
 
-#this is the last cpu temp that was read		
+#this is the last cpu temp that was read
 $last_cpu_temp = 0;
 
 use POSIX qw(strftime);
@@ -189,19 +189,19 @@ sub main
 {
 	# need to go to Full mode so we have unfettered control of Fans
 	set_fan_mode("full");
-	
-	my $cpu_fan_level = ""; 
+
+	my $cpu_fan_level = "";
 	my $old_cpu_fan_level = "";
 	my $override_hd_fan_level = 0;
 	my $last_hd_check_time = 0;
 	my $hd_fan_duty = 0;
 
-	
+
 	while()
 	{
 		$old_cpu_fan_level = $cpu_fan_level;
 		$cpu_fan_level = control_cpu_fan( $old_cpu_fan_level );
-		
+
 		if( $old_cpu_fan_level ne $cpu_fan_level )
 		{
 			$last_fan_level_change_time = time;
@@ -209,14 +209,14 @@ sub main
 
 		if( $cpu_fan_level eq "high" )
 		{
-			
+
 			if( $hd_fans_cool_cpu && !$override_hd_fan_level && ($last_cpu_temp >= $cpu_hd_override_temp || $last_cpu_temp == 0) )
 			{
 				#override hd fan zone level, once we override we won't backoff until the cpu drops to below "high"
 				$override_hd_fan_level = 1;
 				dprint( 0, "CPU Temp: $last_cpu_temp >= $cpu_hd_override_temp, Overiding HD fan zone to $hd_fan_duty_high%, \n" );
 				set_fan_zone_duty_cycle( $hd_fan_zone, $hd_fan_duty_high );
-				
+
 				$last_fan_level_change_time = time;
 			}
 		}
@@ -225,26 +225,26 @@ sub main
 			#restore hd fan zone level;
 			$override_hd_fan_level = 0;
 			dprint( 0, "Restoring HD fan zone to $hd_fan_duty%\n" );
-			set_fan_zone_duty_cycle( $hd_fan_zone, $hd_fan_duty );	
-			
+			set_fan_zone_duty_cycle( $hd_fan_zone, $hd_fan_duty );
+
 			$last_fan_level_change_time = time;
 		}
 
 		# periodically determine hd fan zone level
-		
+
 		my $check_time = time;
 		if( $check_time - $last_hd_check_time > $hd_polling_interval )
 		{
 			$last_hd_check_time = $check_time;
-	
+
 			# we refresh the hd_list from camcontrol devlist
 			# everytime because if you're adding/removing HDs we want
 			# starting checking their temps too!
 			@hd_list = get_hd_list();
-			
+
 			my $hd_temp = get_hd_temp();
 			$hd_fan_duty = calculate_hd_fan_duty_cycle( $hd_temp, $hd_fan_duty );
-			
+
 			if( !$override_hd_fan_level )
 			{
 				set_fan_zone_duty_cycle( $hd_fan_zone, $hd_fan_duty );
@@ -252,11 +252,11 @@ sub main
 				$last_fan_level_change_time = time; # this resets every time, but it shouldn't matter since hd_polling_interval is large.
 			}
 		}
-		
-		# verify_fan_speed_levels function is fairly complicated		
+
+		# verify_fan_speed_levels function is fairly complicated
 		verify_fan_speed_levels(  $cpu_fan_level, $override_hd_fan_level ? $hd_fan_duty_high : $hd_fan_duty );
-		
-					
+
+
 		# CPU temps can go from cool to hot in 2 seconds! so we only ever sleep for 1 second.
 		sleep 1;
 
@@ -269,7 +269,7 @@ sub get_hd_list
 	dprint(3,"$disk_list\n");
 
 	my @vals = split(" ", $disk_list);
-	
+
 	foreach my $item (@vals)
 	{
 		dprint(2,"$item\n");
@@ -281,14 +281,14 @@ sub get_hd_list
 sub get_hd_temp
 {
 	my $max_temp = 0;
-	
+
 	foreach my $item (@hd_list)
 	{
 		my $disk_dev = "/dev/$item";
 		my $command = "/usr/local/sbin/smartctl -A $disk_dev | grep Temperature_Celsius";
- 		
+
 		dprint( 3, "$command\n" );
-		
+
 		my $output = `$command`;
 
 		dprint( 2, "$output");
@@ -298,11 +298,11 @@ sub get_hd_temp
 		# grab 10th item from the output, which is the hard drive temperature (on Seagate NAS HDs)
   		my $temp = "$vals[9]";
 		chomp $temp;
-		
+
 		if( $temp )
 		{
 			dprint( 1, "$disk_dev: $temp\n");
-			
+
 			$max_temp = $temp if $temp > $max_temp;
 		}
 	}
@@ -313,12 +313,12 @@ sub get_hd_temp
 }
 
 ###########################
-# verify_fan_speed_levels() 
+# verify_fan_speed_levels()
 # this function verifies a fan zone is high, when it should be high, and low when it should be low.
 # you pass in the cpu_fan_level and the hd_fan_duty (note: level vs duty!). If the hd fan duty is
 # overridden, then you need to pass in the overridden duty.
 #
-# The tricks are that 
+# The tricks are that
 #	1) we need to wait at least 10 seconds after changing a fan level before checking if its
 # 	   made the change.
 #	2) if we do read the change, and its not right, we should try again, after redoing the change
@@ -330,7 +330,7 @@ sub get_hd_temp
 #
 # to accomplish that, we use a few globals:
 #
-#	last_fan_level_change_time	this is the time when the last fan change was made, and should be updated, 
+#	last_fan_level_change_time	this is the time when the last fan change was made, and should be updated,
 #				      	whenever a fan change is made. We also updated it each time through the
 #					verify function so that we will not re-verify until our delay has expired
 #
@@ -354,27 +354,27 @@ sub verify_fan_speed_levels
 	dprint( 4, "verify_fan_speed_levels: cpu_fan_level: $cpu_fan_level, hd_fan_duty: $hd_fan_duty\n");
 
 	my $extra_delay_before_next_check = 0;
-	
+
 	my $temp_time = time - $last_fan_level_change_time;
 	dprint( 4, "Time since last verify : $temp_time, last change: $last_fan_level_change_time, delay: $fan_speed_change_delay\n");
 	if( $temp_time > $fan_speed_change_delay )
 	{
 		# we've waited for the speed change to take effect.
-		
+
 		my $cpu_fan_speed = get_fan_speed("CPU");
 		if( $cpu_fan_speed < 0 )
 		{
 			dprint(1,"CPU Fan speed unavailable\n" );
 			$fan_unreadable_time = time if $fan_unreadable_time == 0;
 		}
-		
+
 		my $hd_fan_speed = get_fan_speed("HD");
 		if( $hd_fan_speed < 0 )
 		{
 			dprint(1,"HD Fan speed unavailable\n" );
 			$fan_unreadable_time = time if $fan_unreadable_time == 0;
 		}
-		
+
 		if( $hd_fan_speed < 0 || $cpu_fan_speed < 0 )
 		{
 			# one of the fans couldn't be reliably read
@@ -389,16 +389,16 @@ sub verify_fan_speed_levels
 			}
 			else
 			{
-				dprint(2, "Fan speeds are unreadable after $temp_time seconds, will try again\n");	
-			}		
+				dprint(2, "Fan speeds are unreadable after $temp_time seconds, will try again\n");
+			}
 		}
 		else
 		{
 			# we have no been able to read the fan speeds
 
 			my $cpu_fan_is_wrong = 0;
-			my $hd_fan_is_wrong = 0;	
-			
+			my $hd_fan_is_wrong = 0;
+
 			#verify cpu fans
 			if( $cpu_fan_level eq "high" && $cpu_fan_speed < $cpu_max_fan_speed )
 			{
@@ -410,7 +410,7 @@ sub verify_fan_speed_levels
 				dprint(0, "CPU fan speed should be low, but $cpu_fan_speed > $cpu_max_fan_speed.\n");
 				$cpu_fan_is_wrong=1;
 			}
-			
+
 			#verify hd fans
 			if( $hd_fan_duty >= $hd_fan_duty_high && $hd_fan_speed < $hd_max_fan_speed )
 			{
@@ -422,12 +422,12 @@ sub verify_fan_speed_levels
 				dprint(0, "HD fan speed should be low, but $hd_fan_speed > $hd_max_fan_speed.\n");
 				$hd_fan_is_wrong=1;
 			}
-			
+
 			#verify both fans are good
 			if( $cpu_fan_is_wrong || $hd_fan_is_wrong )
 			{
 				$bmc_fail_count++;
-				
+
 				dprint( 3, "bmc_fail_count:  $bmc_fail_count, bmc_fail_threshold: $bmc_fail_threshold\n");
 				if( $bmc_fail_count <= $bmc_fail_threshold )
 				{
@@ -456,18 +456,18 @@ sub verify_fan_speed_levels
 				$bmc_fail_count = 0; # we succeeded
 
 				$extra_delay_before_next_check = 60 - $fan_speed_change_delay; # lets give it a minute since it was good.
-			}	
+			}
 
-				
+
 			#reset our unreadable timer, since we read the fan speeds.
 			$fan_unreadable_time = 0;
-									
+
 		}
-			
+
 		#reset our timer, so that we'll wait before checking again.
 		$last_fan_level_change_time = time + $extra_delay_before_next_check; #another delay before checking please.
 	}
-	
+
 	return;
 }
 
@@ -486,7 +486,7 @@ sub control_cpu_fan
 	if( $old_cpu_fan_level ne $cpu_fan_level )
 	{
 		dprint( 1, "CPU Fan changing... ($cpu_fan_level)\n");
-		set_fan_zone_level( $cpu_fan_zone, $cpu_fan_level );	
+		set_fan_zone_level( $cpu_fan_zone, $cpu_fan_level );
 	}
 
 	return $cpu_fan_level;
@@ -498,7 +498,7 @@ sub calculate_hd_fan_duty_cycle
 	my $hd_duty;
 
 
-	if ($hd_temp >= $hd_max_allowed_temp  ) 
+	if ($hd_temp >= $hd_max_allowed_temp  )
 	{
 		$hd_duty = $hd_fan_duty_high;
 		dprint(0, "Drives are too hot, going to $hd_fan_duty_high%\n") unless $old_hd_duty == $hd_duty;
@@ -507,12 +507,12 @@ sub calculate_hd_fan_duty_cycle
 	{
 		$hd_duty = $hd_fan_duty_med_high;
     		dprint(0, "Drives are warm, going to $hd_fan_duty_med_high%\n") unless $old_hd_duty == $hd_duty;
-		
+
 	}
-	elsif ($hd_temp >= $hd_max_allowed_temp - 2 ) 
+	elsif ($hd_temp >= $hd_max_allowed_temp - 2 )
 	{
 		$hd_duty = $hd_fan_duty_med_low;
- 		dprint(0, "Drives are warming, going to $hd_fan_duty_med_low%\n") unless $old_hd_duty == $hd_duty; 
+ 		dprint(0, "Drives are warming, going to $hd_fan_duty_med_low%\n") unless $old_hd_duty == $hd_duty;
  	}
 	elsif( $hd_temp > 0 )
 	{
@@ -524,24 +524,24 @@ sub calculate_hd_fan_duty_cycle
 		$hd_duty = 100;
 		dprint( 0, "Drive temperature ($hd_temp) invalid. going to 100%\n");
 	}
-	
+
 	return $hd_duty;
 }
 
 sub build_date_string
 {
 	my $datestring = strftime "%F %H:%M:%S", localtime;
-	
+
 	return $datestring;
 }
 
 sub dprint
 {
 	my ( $level,$output) = @_;
-	
+
 #	print( "dprintf: debug = $debug, level = $level, output = \"$output\"\n" );
-	
-	if( $debug > $level ) 
+
+	if( $debug > $level )
 	{
 		my $datestring = build_date_string();
 		print "$datestring: $output";
@@ -553,8 +553,8 @@ sub dprint
 sub dprint_list
 {
 	my ( $level,$name,@output) = @_;
-		
-	if( $debug > $level ) 
+
+	if( $debug > $level )
 	{
 		dprint($level,"$name:\n");
 
@@ -586,7 +586,7 @@ sub get_fan_mode_code
 	elsif(	$fan_mode eq	'heavyio' )	{ $m = 4; }
 	else 					{ die "illegal fan mode: $fan_mode\n" }
 
-	dprint( 3, "fanmode: $fan_mode = $m\n"); 
+	dprint( 3, "fanmode: $fan_mode = $m\n");
 
 	return $m;
 }
@@ -602,7 +602,7 @@ sub set_fan_mode
 	sleep 5;	#need to give the BMC some breathing room
 
 	return;
-}	
+}
 
 # returns the maximum core temperature from the kernel to determine CPU temperature.
 # in my testing I found that the max core temperature was pretty much the same as the IPMI 'CPU Temp'
@@ -616,17 +616,17 @@ sub get_cpu_temp_sysctl
 	dprint(3,"core_temps:\n$core_temps\n");
 
 	my @core_temps_list = split(" ", $core_temps);
-	
+
 	dprint_list( 4, "core_temps_list", @core_temps_list );
 
 	my $max_core_temp = 0;
-	
+
 	foreach my $core_temp (@core_temps_list)
 	{
 		if( $core_temp )
 		{
 			dprint( 2, "core_temp = $core_temp C\n");
-			
+
 			$max_core_temp = $core_temp if $core_temp > $max_core_temp;
 		}
 	}
@@ -645,7 +645,7 @@ sub get_cpu_temp_ipmi
 	chomp $cpu_temp;
 
 	dprint( 1, "CPU Temp: $cpu_temp\n");
-	
+
 	$last_cpu_temp = $cpu_temp; # note, this hasn't been cleaned.
 	return $cpu_temp;
 }
@@ -655,9 +655,9 @@ sub decide_cpu_fan_level
 	my ($cpu_temp, $cpu_fan) = @_;
 
 	#if cpu_temp evaluates as "0", its most likely the reading returned rubbish.
-	if ($cpu_temp <= 0) 
+	if ($cpu_temp <= 0)
 	{
-		if( $cpu_temp eq "No")	# "No reading" 
+		if( $cpu_temp eq "No")	# "No reading"
 		{
 			dprint( 0, "CPU Temp has no reading.\n");
 		}
@@ -671,7 +671,7 @@ sub decide_cpu_fan_level
 		}
 		dprint( 0, "Assuming worst-case and going high.\n");
 		$cpu_fan = "high";
-	} 
+	}
 	else
 	{
 		if( $cpu_temp >= $high_cpu_temp )
@@ -693,7 +693,7 @@ sub decide_cpu_fan_level
 		elsif( $cpu_temp > $low_cpu_temp && ($cpu_fan eq "high" || $cpu_fan eq "" ) )
 		{
 			dprint( 0, "CPU Temp: $cpu_temp dropped below $med_cpu_temp, CPU Fan going med.\n");
-			
+
 			$cpu_fan = "med";
 		}
 		elsif( $cpu_temp <= $low_cpu_temp )
@@ -705,17 +705,17 @@ sub decide_cpu_fan_level
 			$cpu_fan = "low";
 		}
 	}
-		
+
 	dprint( 1, "CPU Fan: $cpu_fan\n");
 
 	return $cpu_fan;
-} 
+}
 
 # zone,dutycycle%
 sub set_fan_zone_duty_cycle
 {
 	my ( $zone, $duty ) = @_;
-	
+
 	if( $zone < 0 || $zone > 1 )
 	{
 		bail_with_fans_full( "Illegal Fan Zone" );
@@ -726,11 +726,11 @@ sub set_fan_zone_duty_cycle
 		dprint( 0, "illegal duty cycle, assuming 100%\n");
 		$duty = 100;
 	}
-		
+
 	dprint( 1, "Setting Zone $zone duty cycle to $duty%\n");
 
 	`$ipmitool raw 0x30 0x70 0x66 0x01 $zone $duty`;
-	
+
 	return;
 }
 
@@ -739,7 +739,7 @@ sub set_fan_zone_level
 {
 	my ( $fan_zone, $level) = @_;
 	my $duty = 0;
-	
+
 	#assumes high if not low or med, for safety.
 	if( $level eq "low" )
 	{
@@ -760,7 +760,7 @@ sub set_fan_zone_level
 sub get_fan_header_by_name
 {
 	my ($fan_name) = @_;
-	
+
 	if( $fan_name eq "CPU" )
 	{
 		return $cpu_fan_header;
@@ -778,7 +778,7 @@ sub get_fan_header_by_name
 sub get_fan_speed
 {
 	my ($fan_name) = @_;
-	
+
 	my $fan = get_fan_header_by_name( $fan_name );
 
 	my $command = "$ipmitool sdr | grep $fan";
@@ -807,11 +807,11 @@ sub get_fan_speed
 		dprint( 0, "$fan_name Fan speed: $fan_speed RPM, is nonsensical\n");
 		$fan_speed = -1;
 	}
-	else	
+	else
 	{
 		dprint( 1, "$fan_name Fan speed: $fan_speed RPM\n");
 	}
-	
+
 	return $fan_speed;
 }
 
@@ -821,6 +821,6 @@ sub reset_bmc
 
 	dprint( 0, "Resetting BMC\n");
 	`$ipmitool bmc reset cold`;
-	
+
 	return;
 }
