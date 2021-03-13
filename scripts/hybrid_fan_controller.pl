@@ -92,8 +92,8 @@ $hd_fans_cool_cpu = 1;		# 1 if the hd fans should spin up to cool the cpu, 0 oth
 ## You need to determine the actual max fan speeds that are achieved by the fans
 ## Connected to the cpu_fan_header and the hd_fan_header.
 ## These values are used to verify high/low fan speeds and trigger a BMC reset if necessary.
-$cpu_max_fan_speed 	= 1700;
-$hd_max_fan_speed 	= 1400;
+$cpu_max_fan_speed 	= 1200; # Noctua NF-A15 PWM 12v https://noctua.at/de/nf-a15-pwm
+$hd_max_fan_speed 	= 2200; # Noctua NF-A8 PWM 12v https://noctua.at/de/nf-a8-pwm
 
 
 ## CPU FAN DUTY LEVELS
