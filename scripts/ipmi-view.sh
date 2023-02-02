@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 if [[ "$OSTYPE" != "darwin"* ]]; then
   echo "$OSTYPE is not supported"
